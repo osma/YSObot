@@ -34,6 +34,7 @@ def query_new_yso():
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
         PREFIX owl:  <http://www.w3.org/2002/07/owl#>
         PREFIX dct:  <http://purl.org/dc/terms/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         SELECT ?conc ?label
         FROM <%s>
         WHERE {
@@ -42,9 +43,10 @@ def query_new_yso():
             ?conc dct:created ?created .
             FILTER(LANG(?label)='fi')
             FILTER NOT EXISTS { ?conc owl:deprecated true }
+            FILTER(?created >= "2017-02-01"^^xsd:date)
         }
         ORDER BY DESC(?created)
-        LIMIT 10
+        LIMIT 100
     """ % YSO_GRAPH)
     sparql.setReturnFormat(JSON)
     results = sparql.query().convert()
@@ -98,13 +100,11 @@ if __name__ == '__main__':
     
     # find out concepts we have already tweeted (based on hashtags)
     already_posted = set()
-    for tweet in t.statuses.user_timeline(screen_name=SCREEN_NAME, count=20):
+    for tweet in t.statuses.user_timeline(screen_name=SCREEN_NAME, count=200):
         for hashtag in ['#' + h['text'] for h in tweet['entities']['hashtags']]:
             if hashtag != '#YSO':
                 already_posted.add(hashtag)
                 break
-    for hashtag in already_posted:
-        logging.debug('Already posted: %s', hashtag)
     
     to_send = []
     for conc,label in query_new_yso():
@@ -121,6 +121,6 @@ if __name__ == '__main__':
             logging.info("Actual posting disabled due to simulation mode.")
         else:
             t.statuses.update(status=text)
-        if idx != len(to_send)-1: # not last item
-            logging.info("Sleeping for 1 minute to avoid Twitter API rate limit problems")
-            time.sleep(60)
+            if idx != len(to_send)-1: # not last item
+                logging.info("Sleeping for 1 minute to avoid Twitter API rate limit problems")
+                time.sleep(60)
