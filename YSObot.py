@@ -20,6 +20,11 @@ FINNA_WEB_SEARCH='https://finna.fi/Search/Results'
 BOT_NAME='YSO Bot'
 SCREEN_NAME='YSOuudet'
 
+# limits on tweeting
+TWEET_INTERVAL=15*60	# interval between successive tweets
+MAX_LIMIT=30		# maximum number of tweets per run
+
+
 CREDENTIALS_FILE='~/.ysobot_credentials'
 # App registered by @OsmaSuominen
 # I don't care that these are public, as the real authentication is done using OAuth tokens
@@ -113,7 +118,7 @@ if __name__ == '__main__':
             continue
         to_send.append((conc,label))
     
-    for idx, conclabel in enumerate(to_send):
+    for idx, conclabel in enumerate(to_send[:MAX_LIMIT]):
         conc,label = conclabel
         text = compose_tweet(conc, label, search_finna(label))
         logging.info("Posting: %s", text)
@@ -122,5 +127,5 @@ if __name__ == '__main__':
         else:
             t.statuses.update(status=text)
             if idx != len(to_send)-1: # not last item
-                logging.info("Sleeping for 1 minute to avoid Twitter API rate limit problems")
-                time.sleep(60)
+                logging.info("Sleeping for %d seconds" % INTERVAL)
+                time.sleep(INTERVAL)
