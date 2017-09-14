@@ -127,5 +127,5 @@ if __name__ == '__main__':
         else:
             t.statuses.update(status=text)
             if idx != len(to_send)-1: # not last item
-                logging.info("Sleeping for %d seconds" % INTERVAL)
-                time.sleep(INTERVAL)
+                logging.info("Sleeping for %d seconds" % TWEET_INTERVAL)
+                time.sleep(TWEET_INTERVAL)
